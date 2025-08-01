@@ -220,6 +220,7 @@
       const conflict = (bootMode === 'Legacy' && secureBoot === 'Enabled');
       document.getElementById('conflictAlert').style.display = conflict ? 'block' : 'none';
     }
+    window.onload = () => switchTab('main');
   </script>
 </body>
 </html>

@@ -105,6 +105,7 @@
       <div class="group">
         <h3>System Info</h3>
         <div>System Time: <span id="systemTime"></span></div>
+<div>System Date: <span id="systemDate"></span></div>
         <div>Processor: Intel Core i7-10700</div>
         <div>Memory: 8192MB DDR4</div>
         <div>BIOS Version: 1.0.3</div>
@@ -225,11 +226,14 @@
   updateSystemTime();
 };
   function updateSystemTime() {
-    const now = new Date();
-    const timeStr = now.toLocaleTimeString();
-    const timeEl = document.getElementById('systemTime');
-    if (timeEl) timeEl.textContent = timeStr;
-  }
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString();
+  const dateStr = now.toLocaleDateString();
+  const timeEl = document.getElementById('systemTime');
+  const dateEl = document.getElementById('systemDate');
+  if (timeEl) timeEl.textContent = timeStr;
+  if (dateEl) dateEl.textContent = dateStr;
+}
   setInterval(updateSystemTime, 1000);
 </script>
 </body>

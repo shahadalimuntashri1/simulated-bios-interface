@@ -212,9 +212,40 @@
       document.getElementById(tab).style.display = 'block';
     }
     function showImpact(selectElement, message) {
-      const impactDiv = selectElement.parentElement.querySelector('.impact');
-      impactDiv.textContent = '💡 وش ممكن يصير؟ → ' + message;
-    }
+  const selectedValue = selectElement.value;
+  let explanation = '';
+
+  switch (selectedValue) {
+    case 'Legacy':
+      explanation = 'Legacy mode uses traditional BIOS; not compatible with modern GPT-based OS installations.';
+      break;
+    case 'UEFI':
+      explanation = 'UEFI supports faster boot and secure boot features; required for newer OS like Windows 11.';
+      break;
+    case 'Enabled':
+      if (selectElement.id === 'secureBoot') explanation = 'Prevents unauthorized OS or malware from booting.';
+      else if (selectElement.parentElement.innerText.includes('Virtualization')) explanation = 'Allows running virtual machines using tools like VirtualBox or Hyper-V.';
+      else if (selectElement.parentElement.innerText.includes('TPM')) explanation = 'Required for Windows 11 security features like BitLocker.';
+      else if (selectElement.parentElement.innerText.includes('Internal Graphics')) explanation = 'Forces use of integrated GPU when no external GPU is installed.';
+      else explanation = 'Enables this BIOS feature.';
+      break;
+    case 'Disabled':
+      if (selectElement.id === 'secureBoot') explanation = 'Allows any OS to boot, including unsigned or modified systems.';
+      else if (selectElement.parentElement.innerText.includes('Virtualization')) explanation = 'Disables ability to run virtual machines.';
+      else if (selectElement.parentElement.innerText.includes('TPM')) explanation = 'May prevent system from meeting OS security requirements.';
+      else if (selectElement.parentElement.innerText.includes('Internal Graphics')) explanation = 'Disables integrated GPU; external GPU must be installed.';
+      else explanation = 'Disables this BIOS feature.';
+      break;
+    case 'Auto':
+      explanation = 'Automatically uses integrated GPU only if no external GPU is found.';
+      break;
+    default:
+      explanation = message;
+  }
+
+  const impactDiv = selectElement.parentElement.querySelector('.impact');
+  impactDiv.textContent = '💡 وش ممكن يصير؟ → ' + explanation;
+}
     function checkConflicts() {
       const bootMode = document.getElementById('bootMode').value;
       const secureBoot = document.getElementById('secureBoot').value;

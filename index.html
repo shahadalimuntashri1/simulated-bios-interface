@@ -100,8 +100,29 @@
       <div class="tab" onclick="switchTab('help')">Help</div>
       <div class="tab" onclick="switchTab('exit')">Exit</div>
     </div>
-    <div class="alert" id="conflictAlert">⚠️ تعارض في الإعدادات: UEFI لا يعمل مع Legacy Boot Mode.</div>
-    <div class="content" id="main">
+    <div class="alert" id="conflictAlert">
+  ⚠️ تعارض في الإعدادات: UEFI لا يعمل مع Legacy Boot Mode.<br>
+  💡 Secure Boot يتطلب أن يكون Boot Mode مضبوطًا على UEFI. وضع Legacy لا يدعم تشغيل الأنظمة المؤمنة بواسطة Secure Boot، لذلك قد يفشل النظام في الإقلاع أو تظهر رسائل خطأ.
+<div class="alert" id="conflictAlertTPM" style="display:none">
+  ⚠️ تعارض في الإعدادات: تم تعطيل TPM.<br>
+  💡 TPM (Trusted Platform Module) مطلوب لتفعيل ميزات الأمان مثل BitLocker والتشفير في Windows 11. تعطيله قد يمنع تثبيت النظام أو يقلل من الأمان.
+</div>
+<div class="alert" id="conflictAlertVirt" style="display:none">
+  ⚠️ تعارض في الإعدادات: تم تعطيل Virtualization.<br>
+  💡 تعطيل Virtualization يمنع تشغيل الأنظمة الوهمية مثل VirtualBox أو Hyper-V، مما يؤثر على المطورين والمستخدمين الذين يحتاجون لتجربة أنظمة أخرى.
+<div class="alert" id="conflictAlertFastBoot" style="display:none">
+  ⚠️ تنبيه: Fast Boot مفعل.<br>
+  💡 تمكين Fast Boot يتجاوز بعض فحوصات الأجهزة عند الإقلاع مثل فحص الذاكرة، مما يجعل الإقلاع أسرع ولكن قد لا يتم اكتشاف بعض الأجهزة الجديدة.
+</div>
+<div class="alert" id="conflictAlertCStates" style="display:none">
+  ⚠️ تنبيه: CPU C States معطل.<br>
+  💡 تعطيل C States يمنع المعالج من الدخول في أوضاع توفير الطاقة، مما يؤدي إلى استهلاك طاقة أعلى حتى عند الخمول.
+</div>
+<div class="alert" id="conflictAlertGraphics" style="display:none">
+  ⚠️ تنبيه: Internal Graphics معطل.<br>
+  💡 تعطيل المعالج الرسومي المدمج يتطلب وجود بطاقة رسومية خارجية. إذا لم تكن موجودة، قد لا يعرض الجهاز شيئًا.
+</div>
+$1>
       <div class="group">
         <h3>System Info</h3>
         <div>System Time: <span id="systemTime"></span></div>
@@ -137,7 +158,7 @@
         <h3>Advanced Features</h3>
         <div class="setting">
           Virtualization:
-          <select onchange="showImpact(this, 'Required for running virtual machines.')">
+          <select onchange="showImpact(this, 'Required for running virtual machines.'); checkConflicts();">
             <option>Enabled</option>
             <option>Disabled</option>
           </select>
@@ -145,7 +166,7 @@
         </div>
         <div class="setting">
           Fast Boot:
-          <select onchange="showImpact(this, 'Skips some hardware checks to boot faster.')">
+          <select onchange="showImpact(this, 'Skips some hardware checks to boot faster.'); checkConflicts();">
             <option>Enabled</option>
             <option>Disabled</option>
           </select>
@@ -158,7 +179,7 @@
         <h3>Power Management</h3>
         <div class="setting">
           CPU C States:
-          <select onchange="showImpact(this, 'May save power but affect performance.')">
+          <select onchange="showImpact(this, 'May save power but affect performance.'); checkConflicts();">
             <option>Enabled</option>
             <option>Disabled</option>
           </select>
@@ -171,7 +192,7 @@
         <h3>Peripheral Settings</h3>
         <div class="setting">
           Internal Graphics:
-          <select onchange="showImpact(this, 'Needed if no external GPU is installed.')">
+          <select onchange="showImpact(this, 'Needed if no external GPU is installed.'); checkConflicts();">
             <option>Auto</option>
             <option>Enabled</option>
             <option>Disabled</option>
@@ -180,7 +201,7 @@
         </div>
         <div class="setting">
           TPM:
-          <select onchange="showImpact(this, 'Required for Windows 11 and BitLocker.')">
+          <select onchange="showImpact(this, 'Required for Windows 11 and BitLocker.'); checkConflicts();">
             <option>Enabled</option>
             <option>Disabled</option>
           </select>
@@ -259,9 +280,28 @@
   setTimeout(() => {
     const bootMode = document.getElementById('bootMode')?.value;
     const secureBoot = document.getElementById('secureBoot')?.value;
-    const isConflict = (bootMode === 'Legacy' && secureBoot === 'Enabled');
-    document.getElementById('conflictAlert').style.display = isConflict ? 'block' : 'none';
+    const virtualization = document.querySelector("#advanced select:nth-of-type(1)")?.value;
+    const fastBoot = document.querySelector("#advanced select:nth-of-type(2)")?.value;
+    const cstates = document.querySelector("#cpu select")?.value;
+    const tpm = document.querySelector("#peripherals select:nth-of-type(2)")?.value;
+    const graphics = document.querySelector("#peripherals select:nth-of-type(1)")?.value;
+
+    const isUEFIConflict = (bootMode === 'Legacy' && secureBoot === 'Enabled');
+    const isTPMDisabled = tpm === 'Disabled';
+    const isVirtDisabled = virtualization === 'Disabled';
+    const isFastBootEnabled = fastBoot === 'Enabled';
+    const isCStatesDisabled = cstates === 'Disabled';
+    const isGraphicsDisabled = graphics === 'Disabled';
+
+    document.getElementById('conflictAlert').style.display = isUEFIConflict ? 'block' : 'none';
+    document.getElementById('conflictAlertTPM').style.display = isTPMDisabled ? 'block' : 'none';
+    document.getElementById('conflictAlertVirt').style.display = isVirtDisabled ? 'block' : 'none';
+    document.getElementById('conflictAlertFastBoot').style.display = isFastBootEnabled ? 'block' : 'none';
+    document.getElementById('conflictAlertCStates').style.display = isCStatesDisabled ? 'block' : 'none';
+    document.getElementById('conflictAlertGraphics').style.display = isGraphicsDisabled ? 'block' : 'none';
   }, 50);
+}, 50);
+}, 50);
 }
     window.onload = () => {
   switchTab('main');

@@ -256,11 +256,13 @@
   impactDiv.textContent = '💡 وش ممكن يصير؟ → ' + explanation;
 }
     function checkConflicts() {
-      const bootMode = document.getElementById('bootMode').value;
-      const secureBoot = document.getElementById('secureBoot').value;
-      const conflict = (bootMode === 'Legacy' && secureBoot === 'Enabled');
-      document.getElementById('conflictAlert').style.display = conflict ? 'block' : 'none';
-    }
+  setTimeout(() => {
+    const bootMode = document.getElementById('bootMode')?.value;
+    const secureBoot = document.getElementById('secureBoot')?.value;
+    const isConflict = (bootMode === 'Legacy' && secureBoot === 'Enabled');
+    document.getElementById('conflictAlert').style.display = isConflict ? 'block' : 'none';
+  }, 50);
+}
     window.onload = () => {
   switchTab('main');
   updateSystemTime();

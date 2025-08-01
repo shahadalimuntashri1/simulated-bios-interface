@@ -280,26 +280,11 @@ $1>
   setTimeout(() => {
     const bootMode = document.getElementById('bootMode')?.value;
     const secureBoot = document.getElementById('secureBoot')?.value;
-    const virtualization = document.querySelector("#advanced select:nth-of-type(1)")?.value;
-    const fastBoot = document.querySelector("#advanced select:nth-of-type(2)")?.value;
-    const cstates = document.querySelector("#cpu select")?.value;
-    const tpm = document.querySelector("#peripherals select:nth-of-type(2)")?.value;
-    const graphics = document.querySelector("#peripherals select:nth-of-type(1)")?.value;
-
     const isUEFIConflict = (bootMode === 'Legacy' && secureBoot === 'Enabled');
-    const isTPMDisabled = tpm === 'Disabled';
-    const isVirtDisabled = virtualization === 'Disabled';
-    const isFastBootEnabled = fastBoot === 'Enabled';
-    const isCStatesDisabled = cstates === 'Disabled';
-    const isGraphicsDisabled = graphics === 'Disabled';
 
     document.getElementById('conflictAlert').style.display = isUEFIConflict ? 'block' : 'none';
-    document.getElementById('conflictAlertTPM').style.display = isTPMDisabled ? 'block' : 'none';
-    document.getElementById('conflictAlertVirt').style.display = isVirtDisabled ? 'block' : 'none';
-    document.getElementById('conflictAlertFastBoot').style.display = isFastBootEnabled ? 'block' : 'none';
-    document.getElementById('conflictAlertCStates').style.display = isCStatesDisabled ? 'block' : 'none';
-    document.getElementById('conflictAlertGraphics').style.display = isGraphicsDisabled ? 'block' : 'none';
   }, 50);
+}, 50);
 }, 50);
 }, 50);
 }

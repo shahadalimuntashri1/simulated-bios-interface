@@ -7,303 +7,249 @@
   <style>
     body {
       margin: 0;
-      font-family: monospace;
-      background-color: #000080;
+      font-family: 'Courier New', monospace;
+      background-color: #00007f;
       color: #ffffff;
+      min-height: 100vh;
+      padding: 0;
     }
-    .bios {
-      width: 100vw;
-      height: 100vh;
+    .bios-header {
+      background-color: #00007f;
+      color: #ffffff;
+      padding: 10px 20px;
+      font-size: 14px;
       display: flex;
-      flex-direction: column;
-      border: 4px solid #ffffff;
-      box-sizing: border-box;
+      justify-content: center;
+      border-bottom: 1px solid #ffffff;
+    }
+    .bios-container {
+      background-color: #000080;
+      padding: 20px;
+      max-width: 960px;
+      margin: auto;
     }
     .tabs {
-      background-color: #000040;
       display: flex;
-      flex-wrap: wrap;
-      padding: 6px;
-      border-bottom: 2px solid #ffffff;
+      gap: 15px;
+      font-size: 14px;
+      border-bottom: 1px solid #ffffff;
+      padding-bottom: 5px;
+      margin-bottom: 20px;
     }
     .tab {
-      margin-right: 10px;
       cursor: pointer;
       padding: 2px 10px;
-      border: 1px solid transparent;
-      color: #ffff00;
+      background-color: #00007f;
+      color: #ffffff;
     }
     .tab.active {
-      border: 1px solid #ffffff;
-      background-color: #0000aa;
+      background-color: #ffffff;
+      color: #00007f;
+      font-weight: bold;
     }
     .content {
-      flex-grow: 1;
+      background-color: #000040;
+      border: 1px solid #ffffff;
       padding: 20px;
-      font-size: 16px;
-      line-height: 1.6;
-      overflow-y: auto;
-    }
-    .group {
-      margin-bottom: 24px;
-      border-bottom: 1px dashed #ccc;
-      padding-bottom: 12px;
-    }
-    .group h3 {
-      margin-top: 0;
-      color: #00ffff;
+      min-height: 200px;
     }
     .setting {
-      margin-bottom: 14px;
+      margin-bottom: 10px;
     }
-    select {
-      background-color: #000000;
-      color: #00ff00;
+    .description {
+      margin-top: 15px;
+      color: #00ffea;
+    }
+    select, button {
+      background-color: #00007f;
+      color: #ffffff;
       border: 1px solid #ffffff;
-      font-family: monospace;
-      padding: 4px;
+      padding: 2px 10px;
+      font-family: 'Courier New', monospace;
     }
-    .impact {
-      margin-top: 4px;
-      font-style: italic;
+    .bios-footer {
+      background-color: #00007f;
       color: #ffff00;
-    }
-    .alert {
-      background-color: #ff0000;
-      color: #ffffff;
-      padding: 6px;
-      margin-bottom: 12px;
-      display: none;
-    }
-    .button {
-      background-color: #0000aa;
-      color: #ffffff;
-      border: 1px solid #ffffff;
-      padding: 6px 14px;
-      margin-right: 12px;
-      cursor: pointer;
-      font-family: monospace;
-    }
-    .button:hover {
-      background-color: #2222dd;
+      padding: 10px 20px;
+      font-size: 13px;
+      display: flex;
+      justify-content: space-between;
+      border-top: 1px solid #ffffff;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
     }
   </style>
 </head>
 <body>
-  <div class="bios">
+  <div class="bios-header">
+    <span id="tab-title">[Main]</span>
+  </div>
+  <div class="bios-container">
     <div class="tabs">
-      <div class="tab active" onclick="switchTab('main')">Main</div>
-      <div class="tab" onclick="switchTab('boot')">Boot</div>
-      <div class="tab" onclick="switchTab('advanced')">Advanced</div>
-      <div class="tab" onclick="switchTab('cpu')">CPU/Power</div>
-      <div class="tab" onclick="switchTab('peripherals')">Peripherals</div>
-      <div class="tab" onclick="switchTab('help')">Help</div>
-      <div class="tab" onclick="switchTab('exit')">Exit</div>
+      <div class="tab active" onclick="switchTab('main', this)">Main</div>
+      <div class="tab" onclick="switchTab('boot', this)">Boot</div>
+      <div class="tab" onclick="switchTab('advanced', this)">Advanced</div>
+      <div class="tab" onclick="switchTab('security', this)">Security</div>
+      <div class="tab" onclick="switchTab('power', this)">Power</div>
     </div>
-    <div class="alert" id="conflictAlert">
-  ⚠️ تعارض في الإعدادات: UEFI لا يعمل مع Legacy Boot Mode.<br>
-  💡 Secure Boot يتطلب أن يكون Boot Mode مضبوطًا على UEFI. وضع Legacy لا يدعم تشغيل الأنظمة المؤمنة بواسطة Secure Boot، لذلك قد يفشل النظام في الإقلاع أو تظهر رسائل خطأ.
-<div class="alert" id="conflictAlertTPM" style="display:none">
-  ⚠️ تعارض في الإعدادات: تم تعطيل TPM.<br>
-  💡 TPM (Trusted Platform Module) مطلوب لتفعيل ميزات الأمان مثل BitLocker والتشفير في Windows 11. تعطيله قد يمنع تثبيت النظام أو يقلل من الأمان.
-</div>
-<div class="alert" id="conflictAlertVirt" style="display:none">
-  ⚠️ تعارض في الإعدادات: تم تعطيل Virtualization.<br>
-  💡 تعطيل Virtualization يمنع تشغيل الأنظمة الوهمية مثل VirtualBox أو Hyper-V، مما يؤثر على المطورين والمستخدمين الذين يحتاجون لتجربة أنظمة أخرى.
-<div class="alert" id="conflictAlertFastBoot" style="display:none">
-  ⚠️ تنبيه: Fast Boot مفعل.<br>
-  💡 تمكين Fast Boot يتجاوز بعض فحوصات الأجهزة عند الإقلاع مثل فحص الذاكرة، مما يجعل الإقلاع أسرع ولكن قد لا يتم اكتشاف بعض الأجهزة الجديدة.
-</div>
-<div class="alert" id="conflictAlertCStates" style="display:none">
-  ⚠️ تنبيه: CPU C States معطل.<br>
-  💡 تعطيل C States يمنع المعالج من الدخول في أوضاع توفير الطاقة، مما يؤدي إلى استهلاك طاقة أعلى حتى عند الخمول.
-</div>
-<div class="alert" id="conflictAlertGraphics" style="display:none">
-  ⚠️ تنبيه: Internal Graphics معطل.<br>
-  💡 تعطيل المعالج الرسومي المدمج يتطلب وجود بطاقة رسومية خارجية. إذا لم تكن موجودة، قد لا يعرض الجهاز شيئًا.
-</div>
-$1>
-      <div class="group">
-        <h3>System Info</h3>
-        <div>System Time: <span id="systemTime"></span></div>
-<div>System Date: <span id="systemDate"></span></div>
-        <div>Processor: Intel Core i7-10700</div>
-        <div>Memory: 8192MB DDR4</div>
-        <div>BIOS Version: 1.0.3</div>
-      </div>
-    </div>
-    <div class="content" id="boot" style="display:none">
-      <div class="group">
-        <h3>Boot Options</h3>
-        <div class="setting">
-          Boot Mode:
-          <select id="bootMode" onchange="showImpact(this, 'Switching between Legacy and UEFI can affect OS compatibility.'); checkConflicts();">
-            <option>Legacy</option>
-            <option>UEFI</option>
-          </select>
-          <div class="impact"></div>
-        </div>
-        <div class="setting">
-          Secure Boot:
-          <select id="secureBoot" onchange="showImpact(this, 'Disabling Secure Boot may allow unauthorized software to run.'); checkConflicts();">
-            <option>Enabled</option>
-            <option>Disabled</option>
-          </select>
-          <div class="impact"></div>
-        </div>
-      </div>
-    </div>
-    <div class="content" id="advanced" style="display:none">
-      <div class="group">
-        <h3>Advanced Features</h3>
-        <div class="setting">
-          Virtualization:
-          <select onchange="showImpact(this, 'Required for running virtual machines.'); checkConflicts();">
-            <option>Enabled</option>
-            <option>Disabled</option>
-          </select>
-          <div class="impact"></div>
-        </div>
-        <div class="setting">
-          Fast Boot:
-          <select onchange="showImpact(this, 'Skips some hardware checks to boot faster.'); checkConflicts();">
-            <option>Enabled</option>
-            <option>Disabled</option>
-          </select>
-          <div class="impact"></div>
-        </div>
-      </div>
-    </div>
-    <div class="content" id="cpu" style="display:none">
-      <div class="group">
-        <h3>Power Management</h3>
-        <div class="setting">
-          CPU C States:
-          <select onchange="showImpact(this, 'May save power but affect performance.'); checkConflicts();">
-            <option>Enabled</option>
-            <option>Disabled</option>
-          </select>
-          <div class="impact"></div>
-        </div>
-      </div>
-    </div>
-    <div class="content" id="peripherals" style="display:none">
-      <div class="group">
-        <h3>Peripheral Settings</h3>
-        <div class="setting">
-          Internal Graphics:
-          <select onchange="showImpact(this, 'Needed if no external GPU is installed.'); checkConflicts();">
-            <option>Auto</option>
-            <option>Enabled</option>
-            <option>Disabled</option>
-          </select>
-          <div class="impact"></div>
-        </div>
-        <div class="setting">
-          TPM:
-          <select onchange="showImpact(this, 'Required for Windows 11 and BitLocker.'); checkConflicts();">
-            <option>Enabled</option>
-            <option>Disabled</option>
-          </select>
-          <div class="impact"></div>
-        </div>
-      </div>
-    </div>
-    <div class="content" id="help" style="display:none">
-      <div class="group">
-        <h3>Help</h3>
-        <p>This simulated BIOS interface is for educational purposes. You can switch between tabs and change settings. Each setting shows a description of what may happen if you modify it.</p>
-        <ul>
-          <li><strong>Boot Mode:</strong> Choose between Legacy or UEFI boot methods.</li>
-          <li><strong>Secure Boot:</strong> Prevents unauthorized OS loading.</li>
-          <li><strong>Virtualization:</strong> Needed for virtual machine software.</li>
-        </ul>
-      </div>
-    </div>
-    <div class="content" id="exit" style="display:none">
-      <button class="button" onclick="alert('Changes saved. Rebooting...')">Save and Exit</button>
-      <button class="button" onclick="alert('No changes saved.')">Discard and Exit</button>
+    <div class="content" id="tab-content">
+      <!-- Default content loaded here -->
     </div>
   </div>
+  <div class="bios-footer">
+    <span>↑↓: Select Item    ←→: Select Menu    Enter: Select</span>
+    <span>F10: Save & Exit    Esc: Exit</span>
+  </div>
+
   <script>
-    function switchTab(tab) {
+    const biosData = {
+      main: `
+        <div class="setting">Date: <span id="bios-date"></span></div>
+        <div class="setting">Time: <span id="bios-time"></span></div>
+        <div class="setting">Processor: Intel Core i7-12700K</div>
+        <div class="setting">Memory: 16GB DDR4</div>
+      `,
+      boot: `
+        <div class="setting">
+          Boot Order:
+          <select onchange="updateDescription(this.value, 'boot')">
+            <option value="usb">USB</option>
+            <option value="hdd">Hard Disk</option>
+            <option value="cd">CD/DVD</option>
+          </select>
+        </div>
+        <div class="description" id="boot-desc">Set the boot order depending on how you want to start the system.</div>
+      `,
+      advanced: `
+        <div class="setting">
+          Virtualization:
+          <select onchange="updateDescription(this.value, 'virtualization')">
+            <option value="enabled">Enabled</option>
+            <option value="disabled">Disabled</option>
+          </select>
+        </div>
+        <div class="description" id="virtualization-desc">Enabling virtualization allows running virtual systems such as VirtualBox and Docker.</div>
+      `,
+      security: `
+        <div class="setting">
+          Supervisor Password:
+          <select onchange="updateDescription(this.value, 'supervisor')">
+            <option value="disabled">Disabled</option>
+            <option value="enabled">Enabled</option>
+          </select>
+        </div>
+        <div class="description" id="supervisor-desc">Protects BIOS settings from unauthorized access.</div>
+        <div class="setting">
+          Secure Boot:
+          <select onchange="updateDescription(this.value, 'secureboot')">
+            <option value="disabled">Disabled</option>
+            <option value="enabled">Enabled</option>
+          </select>
+        </div>
+        <div class="description" id="secureboot-desc">Prevents loading of unsigned operating systems.</div>
+      `,
+      power: `
+        <div class="setting">
+          AC Power Recovery:
+          <select onchange="updateDescription(this.value, 'acpower')">
+            <option value="off">Power Off</option>
+            <option value="on">Power On</option>
+            <option value="last">Last State</option>
+          </select>
+        </div>
+        <div class="description" id="acpower-desc">Determines the system's behavior after power is restored.</div>
+
+        <div class="setting">
+          ErP Mode:
+          <select onchange="updateDescription(this.value, 'erp')">
+            <option value="disabled">Disabled</option>
+            <option value="enabled">Enabled</option>
+          </select>
+        </div>
+        <div class="description" id="erp-desc">Enabling ErP reduces power consumption when the system is shut down.</div>
+
+        <div class="setting">
+          Wake on LAN:
+          <select onchange="updateDescription(this.value, 'wol')">
+            <option value="disabled">Disabled</option>
+            <option value="enabled">Enabled</option>
+          </select>
+        </div>
+        <div class="description" id="wol-desc">Allows the system to be powered on remotely over the network.</div>
+      `
+    };
+
+    function switchTab(tab, element) {
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      document.querySelector(`.tab[onclick*='${tab}']`).classList.add('active');
-      document.querySelectorAll('.content').forEach(c => c.style.display = 'none');
-      document.getElementById(tab).style.display = 'block';
+      element.classList.add('active');
+      document.getElementById('tab-content').innerHTML = biosData[tab];
+      document.getElementById('tab-title').textContent = `[${tab.charAt(0).toUpperCase() + tab.slice(1)}]`;
+
+      if (tab === 'main') updateClock();
     }
-    function showImpact(selectElement, message) {
-  const selectedValue = selectElement.value;
-  let explanation = '';
-  const label = selectElement.parentElement.innerText;
 
-  if (label.includes('Fast Boot')) {
-    explanation = selectedValue === 'Enabled'
-      ? 'Fast Boot skips hardware checks like memory test, making startup faster but may miss detecting new devices.'
-      : 'Disabling Fast Boot ensures full system checks at every startup, which can detect hardware changes but makes boot slower.';
-  } else if (label.includes('Virtualization')) {
-    explanation = selectedValue === 'Enabled'
-      ? 'Allows using virtual machines via software like VirtualBox or Hyper-V.'
-      : 'Disables virtual machine support; virtualization software will not work.';
-  } else if (label.includes('Boot Mode')) {
-    explanation = selectedValue === 'Legacy'
-      ? 'Legacy mode uses traditional BIOS; may not work with modern systems using GPT.'
-      : 'UEFI mode supports modern hardware, secure boot, and is required for Windows 11.';
-  } else if (label.includes('Secure Boot')) {
-    explanation = selectedValue === 'Enabled'
-      ? 'Helps block malware by allowing only signed OS and drivers to boot.'
-      : 'Disabling Secure Boot allows any OS to boot, including modified or unsigned systems.';
-  } else if (label.includes('TPM')) {
-    explanation = selectedValue === 'Enabled'
-      ? 'Required for Windows 11 security features like BitLocker and device encryption.'
-      : 'Disabling TPM may prevent Windows 11 from installing or reduce security.';
-  } else if (label.includes('Internal Graphics')) {
-    explanation = selectedValue === 'Enabled'
-      ? 'Forces use of integrated GPU even if discrete GPU exists.'
-      : selectedValue === 'Disabled'
-        ? 'Disables integrated GPU; requires external graphics card.'
-        : 'Automatically uses integrated GPU only if no dedicated GPU is detected.';
-  } else if (label.includes('CPU C States')) {
-    explanation = selectedValue === 'Enabled'
-      ? 'CPU can enter low power modes when idle, saving energy.'
-      : 'Keeps CPU at full power; may slightly increase performance and power usage.';
-  } else {
-    explanation = message;
-  }
+    function updateDescription(value, type) {
+      const desc = {
+        boot: {
+          usb: 'The system will try to boot from USB before the internal hard disk.',
+          hdd: 'Booting from the hard disk is the default option for most systems.',
+          cd: 'Booting from CD/DVD is useful for installing legacy systems or rescue tools.'
+        },
+        virtualization: {
+          enabled: 'Virtualization allows running virtual environments like VirtualBox or Hyper-V.',
+          disabled: 'Disabling virtualization will prevent virtual systems from running.'
+        },
+        supervisor: {
+          enabled: 'Changes to BIOS will require a password.',
+          disabled: 'Anyone can access BIOS settings.'
+        },
+        secureboot: {
+          enabled: 'Only trusted operating systems will be allowed to boot.',
+          disabled: 'System may load unsigned or unauthorized OS.'
+        },
+        acpower: {
+          off: 'The system will stay off when power is restored.',
+          on: 'The system will automatically turn on when power is restored.',
+          last: 'The system will return to its last state before the power loss.'
+        },
+        erp: {
+          enabled: 'Reduces power usage when the system is off, compliant with ErP requirements.',
+          disabled: 'Normal power consumption even when the system is shut down.'
+        },
+        wol: {
+          enabled: 'The system can be turned on remotely using a Wake-on-LAN signal.',
+          disabled: 'Wake-on-LAN functionality is disabled.'
+        }
+      };
+      if (desc[type]) {
+        document.getElementById(`${type}-desc`).textContent = desc[type][value];
+      }
+    }
 
-  
+    function updateClock() {
+      const now = new Date();
+      const date = now.toLocaleDateString('en-CA'); // YYYY-MM-DD
+      const time = now.toLocaleTimeString('en-US', { hour12: true });
 
-  const impactDiv = selectElement.parentElement.querySelector('.impact');
-  impactDiv.textContent = '💡 وش ممكن يصير؟ → ' + explanation;
-}
-    function checkConflicts() {
-  setTimeout(() => {
-    const bootMode = document.getElementById('bootMode')?.value;
-    const secureBoot = document.getElementById('secureBoot')?.value;
-    const isUEFIConflict = (bootMode === 'Legacy' && secureBoot === 'Enabled');
+      const dateEl = document.getElementById('bios-date');
+      const timeEl = document.getElementById('bios-time');
 
-    document.getElementById('conflictAlert').style.display = isUEFIConflict ? 'block' : 'none';
-  }, 50);
-}, 50);
-}, 50);
-}, 50);
-}, 50);
-}, 50);
-}
-    window.onload = () => {
-  switchTab('main');
-  updateSystemTime();
-};
-  function updateSystemTime() {
-  const now = new Date();
-  const timeStr = now.toLocaleTimeString();
-  const dateStr = now.toLocaleDateString();
-  const timeEl = document.getElementById('systemTime');
-  const dateEl = document.getElementById('systemDate');
-  if (timeEl) timeEl.textContent = timeStr;
-  if (dateEl) dateEl.textContent = dateStr;
-}
-  setInterval(updateSystemTime, 1000);
-</script>
+      if (dateEl && timeEl) {
+        dateEl.textContent = date;
+        timeEl.textContent = time;
+      }
+    }
+
+    setInterval(updateClock, 1000);
+
+    // Load default tab content
+    document.getElementById('tab-content').innerHTML = biosData['main'];
+    updateClock();
+  </script>
 </body>
 </html>
+
+
+
+

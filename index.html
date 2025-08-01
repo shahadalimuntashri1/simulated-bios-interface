@@ -104,7 +104,7 @@
     <div class="content" id="main">
       <div class="group">
         <h3>System Info</h3>
-        <div>System Time: 23:00</div>
+        <div>System Time: <span id="systemTime"></span></div>
         <div>Processor: Intel Core i7-10700</div>
         <div>Memory: 8192MB DDR4</div>
         <div>BIOS Version: 1.0.3</div>
@@ -220,7 +220,17 @@
       const conflict = (bootMode === 'Legacy' && secureBoot === 'Enabled');
       document.getElementById('conflictAlert').style.display = conflict ? 'block' : 'none';
     }
-    window.onload = () => switchTab('main');
-  </script>
+    window.onload = () => {
+  switchTab('main');
+  updateSystemTime();
+};
+  function updateSystemTime() {
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString();
+    const timeEl = document.getElementById('systemTime');
+    if (timeEl) timeEl.textContent = timeStr;
+  }
+  setInterval(updateSystemTime, 1000);
+</script>
 </body>
 </html>
